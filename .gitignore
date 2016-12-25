@@ -47,3 +47,7 @@ jspm_packages
 .yarn-integrity
 
 *.mp3
+
+*.sqlite
+
+.DS_Store
