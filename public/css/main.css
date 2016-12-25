@@ -1,0 +1,82 @@
+* { box-sizing: border-box }
+
+body {
+	font-family: 'Open Sans', sans-serif;
+	margin: 10px;
+	height: 100vh;
+	display: flex;
+	text-align: center;
+	align-content: center;
+	justify-content: center;
+	align-items: center;
+}
+
+.container {
+	padding: 10px;
+	margin: 20px;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	text-align: center;
+	align-content: center;
+	justify-content: center;
+
+	max-width: 600px;
+}
+
+.container form {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	flex: 1;
+}
+
+.yt-url-label {
+	font-size: 40px;
+	margin: 20px;
+}
+
+.yt-url-input {
+	padding: 10px 20px;
+	max-width: 390px;
+	text-align: center;
+	width: 100%;
+}
+
+.yt-submit {
+	padding: 10px 20px;
+	text-transform: uppercase;
+	margin: 20px;
+	max-width: 390px;
+	font-size: 15px;
+	border-radius: 0;
+	background: #ffffff;
+	border: 1px solid black;
+	cursor: pointer;
+}
+
+.yt-submit:hover {
+	background: black;
+	color: white;
+}
+
+.yt-url-examples {
+	font-size: 11px;
+	max-width: 390px;
+	width: 100%;
+	margin-top: 15px;
+}
+
+.yt-url-examples span {
+	float: left;
+}
+
+.yt-url-examples ul {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+}
+
+.yt-url-examples li {
+	display: inline;
+}
