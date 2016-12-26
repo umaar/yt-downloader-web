@@ -15,7 +15,7 @@ async function getNextItem() {
 	});
 
 	if (jobQuery) {
-		return (await jobQuery.getVideo()).get();
+		return await jobQuery.getVideo();
 	}
 }
 
@@ -28,9 +28,7 @@ const queue = {
 			const item = await getNextItem();
 
 			if (item) {
-				console.log('About to process ', item);
 				await queue.handler(item);
-				console.log('Finished processing ', item);
 				delay = 1000;
 			} else {
 				console.log('Nothing to process');
@@ -103,7 +101,6 @@ app.get('/details/:id', async (req, res) => {
 	};
 
 	if (videoMatch) {
-		console.log('Video found!');
 		const job = await videoMatch.getVideoJob();
 
 		responseData.video = videoMatch.get();
@@ -139,7 +136,8 @@ async function setupDB() {
 	const sequelize = new Sequelize('database', 'username', 'password', {
 		storage: __dirname + '/database.sqlite',
 		host: 'localhost',
-		dialect: 'sqlite'
+		dialect: 'sqlite',
+		logging: false
 	});
 
 	Video = sequelize.define('video', {
@@ -166,53 +164,14 @@ async function setupDB() {
 	});
 }
 
-async function dbTest() {
-	const video1 = await Video.create({
-		video_id: 'zzzzz',
-		video_provider: 'youtube',
-		video_duration: 100
-	});
-
-	const video2 = await Video.create({
-		video_id: 'aaabbb',
-		video_provider: 'youtube',
-		video_duration: 200
-	});
-
-	const videoJob1 = await video2.createVideoJob({
-		foo: 'wahoo',
-		status: 'queued',
-	});
-
-	const videoQuery = await Video.findOne({
-		where: {
-			video_id: 'aaabbb'
-		}
-	});
-
-	const jobQuery = await VideoJob.findOne({
-		where: {
-			id: 1
-		}
-	});
-
-	// console.log(videoQuery.get());
-	// console.log((await videoQuery.getVideoJob()).get());
-	// console.log('\n\n');
-	// console.log((await jobQuery.getVideo()).get());
-	// console.log(video1.constructor.prototype);
-}
-
 async function init() {
 	await setupDB();
-	let i = 0;
-	queue.handle(async data => {
-		i++;
-		console.log('Handle callback. Data received', data);
-		if (i > 3) {
-			await sleep(20000);
-		}
-		await sleep(4000);
+	queue.handle(async video => {
+		console.log('\nvideo received', video.get().video_id);
+		const job = await video.getVideoJob();
+		job.update({
+			status: 'resolved'
+		});
 	});
 }
 
