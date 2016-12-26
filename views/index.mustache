@@ -5,8 +5,11 @@
 		<div class="yt-url-examples">
 			<span>e.g.</span>
 			<ul>
-				<li><a href="/details/?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DJv1ZN8c4_Gs">https://www.youtube.com/watch?v=Jv1ZN8c4_Gs</a></li>
-				<li><a href="/details/?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DE-6xk4W6N20">https://www.youtube.com/watch?v=E-6xk4W6N20</a></li>
+				{{#exampleYouTubeUrls}}
+					<li>
+						<a href="{{url}}">{{rawUrl}}</a>
+					</li>
+				{{/exampleYouTubeUrls}}
 			</ul>
 		</div>
 		<input class="yt-submit" type="submit" value="Get MP3">

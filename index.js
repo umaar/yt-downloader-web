@@ -31,7 +31,6 @@ const queue = {
 				await queue.handler(item);
 				delay = 1000;
 			} else {
-				console.log('Nothing to process');
 				delay = 4000;
 			}
 
@@ -48,13 +47,6 @@ const queue = {
 	}
 };
 
-function sleep(delay) {
-	return new Promise((resolve) => {
-		setTimeout(resolve, delay)
-	})
-}
-
-
 app.engine('mustache', mustacheExpress());
 app.set('view engine', 'mustache');
 app.set('layout', 'layout');
@@ -66,8 +58,18 @@ function extractIDFromUrl(url) {
 }
 
 app.get('/', (req, res) => {
+	const exampleYouTubeUrls = [
+		'https://www.youtube.com/watch?v=Jv1ZN8c4_Gs',
+		'https://www.youtube.com/watch?v=E-6xk4W6N20',
+		'https://www.youtube.com/watch?v=U6y7YOlldek'
+	];
+
 	res.render('index', {
 		title: 'Home',
+		exampleYouTubeUrls: exampleYouTubeUrls.map(url => ({
+			rawUrl: url,
+			url: '/details?url=' + escape(url)
+		}))
 	});
 });
 
@@ -126,7 +128,7 @@ app.get('/details/:id', async (req, res) => {
 
 	responseData.jobsLength = await VideoJob.count();
 
-	responseData.audioReady = responseData.job.status === 'finished';
+	responseData.audioReady = responseData.job.status === 'resolved';
 	res.render('details', responseData);
 });
 
@@ -164,13 +166,23 @@ async function setupDB() {
 	});
 }
 
+function sleep(ms) {
+	return new Promise((resolve, reject) => {
+		setTimeout(resolve, ms);
+	});
+}
+
 async function init() {
 	await setupDB();
+
 	queue.handle(async video => {
+		const startTime = new Date();
 		console.log('\nvideo received', video.get().video_id);
 		const job = await video.getVideoJob();
-		job.update({
-			status: 'resolved'
+		const endTime = new Date();
+		await job.update({
+			status: 'resolved',
+			execution_time: endTime - startTime
 		});
 	});
 }
