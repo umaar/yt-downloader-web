@@ -7,6 +7,56 @@ const app = express()
 let Video;
 let VideoJob;
 
+async function getNextItem() {
+	const jobQuery = await VideoJob.findOne({
+		where: {
+			status: 'queued'
+		}
+	});
+
+	if (jobQuery) {
+		return (await jobQuery.getVideo()).get();
+	}
+}
+
+const queue = {
+	handler: undefined,
+	running: false,
+	startProcessing() {
+		setTimeout(async function() {
+			let delay;
+			const item = await getNextItem();
+
+			if (item) {
+				console.log('About to process ', item);
+				await queue.handler(item);
+				console.log('Finished processing ', item);
+				delay = 1000;
+			} else {
+				console.log('Nothing to process');
+				delay = 4000;
+			}
+
+			setTimeout(queue.startProcessing, delay);
+		}, 10);
+	},
+	handle(fn) {
+		queue.handler = fn;
+
+		if (!queue.running) {
+			queue.running = true;
+			queue.startProcessing();
+		}
+	}
+};
+
+function sleep(delay) {
+	return new Promise((resolve) => {
+		setTimeout(resolve, delay)
+	})
+}
+
+
 app.engine('mustache', mustacheExpress());
 app.set('view engine', 'mustache');
 app.set('layout', 'layout');
@@ -79,16 +129,9 @@ app.get('/details/:id', async (req, res) => {
 
 	responseData.jobsLength = await VideoJob.count();
 
-	console.log(responseData);
+	responseData.audioReady = responseData.job.status === 'finished';
 	res.render('details', responseData);
 });
-
-
-
-
-
-
-
 
 async function setupDB() {
 	const shouldDropTables = true;
@@ -110,7 +153,7 @@ async function setupDB() {
 	});
 
 	VideoJob = sequelize.define('videoJob', {
-		foo: Sequelize.STRING,
+		execution_time: Sequelize.INTEGER,
 		status: Sequelize.STRING
 	});
 
@@ -162,7 +205,15 @@ async function dbTest() {
 
 async function init() {
 	await setupDB();
-	// await dbTest();
+	let i = 0;
+	queue.handle(async data => {
+		i++;
+		console.log('Handle callback. Data received', data);
+		if (i > 3) {
+			await sleep(20000);
+		}
+		await sleep(4000);
+	});
 }
 
 init();

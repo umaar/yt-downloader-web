@@ -1,18 +1,26 @@
 <div class="details-container">
 	<p>
-		Video ID = {{id}}
-	</p>
-
-	<p>
 		just created? {{justCreated}}
 	</p>
 
 	<p>
-		video: {{video}}
+		video ID: {{video.video_id}}
 	</p>
 
 	<p>
-		job: {{job}}
+		video provider: {{video.video_provider}}
+	</p>
+
+	<p>
+		video duration: {{video.video_duration}}
+	</p>
+
+	<p>
+		job status: "{{job.status}}" (Audio is {{^audioReady}}not{{/audioReady}} ready)
+	</p>
+
+	<p>
+		job creation date: {{job.createdAt}}
 	</p>
 
 	<p>
