@@ -4,6 +4,16 @@ const port = 3000;
 const express = require('express')
 const app = express()
 
+const YoutubeMp3Downloader = require('youtube-mp3-downloader');
+
+const YD = new YoutubeMp3Downloader({
+    'ffmpegPath': '/usr/local/bin/ffmpeg',
+    'outputPath': __dirname + '/audio',
+    'youtubeVideoQuality': 'highest',
+    'queueParallelism': 1,
+    'progressTimeout': 1000
+});
+
 let Video;
 let VideoJob;
 
@@ -172,19 +182,51 @@ function sleep(ms) {
 	});
 }
 
-async function init() {
-	await setupDB();
+function downloadYtVideo(id) {
+	return new Promise((resolve, reject) => {
+		YD.download(id);
 
-	queue.handle(async video => {
-		const startTime = new Date();
-		console.log('\nvideo received', video.get().video_id);
-		const job = await video.getVideoJob();
-		const endTime = new Date();
-		await job.update({
-			status: 'resolved',
-			execution_time: endTime - startTime
+		YD.on("finished", () => {
+			console.log('YT: finished\n');
+			resolve();
+		});
+
+		YD.on("error", error => {
+			console.log('YT: error\n');
+		    console.log(error);
+		    reject();
+		});
+
+		YD.on("progress", progress => {
+			console.log('YT: progress\n');
+		    console.log(progress);
 		});
 	});
+}
+
+async function videoHandler(video) {
+	const startTime = new Date();
+
+	console.log('\nvideo received', video.get().video_id);
+	const job = await video.getVideoJob();
+
+	await job.update({
+		status: 'processing'
+	});
+
+	await downloadYtVideo(video.get().video_id);
+	const endTime = new Date();
+
+	await job.update({
+		status: 'resolved',
+		execution_time: endTime - startTime
+	});
+
+}
+
+async function init() {
+	await setupDB();
+	queue.handle(videoHandler);
 }
 
 init();
