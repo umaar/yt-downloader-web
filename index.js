@@ -1,14 +1,14 @@
 const getYouTubeID = require('get-youtube-id');
 const mustacheExpress = require('mustache-express');
 const port = 3000;
-const express = require('express')
-const app = express()
+const express = require('express');
+const app = express();
 
 const YoutubeMp3Downloader = require('youtube-mp3-downloader');
 
 const YD = new YoutubeMp3Downloader({
     'ffmpegPath': '/usr/local/bin/ffmpeg',
-    'outputPath': __dirname + '/audio',
+    'outputPath': __dirname + '/public/audio',
     'youtubeVideoQuality': 'highest',
     'queueParallelism': 1,
     'progressTimeout': 1000
@@ -78,13 +78,13 @@ app.get('/', (req, res) => {
 		title: 'Home',
 		exampleYouTubeUrls: exampleYouTubeUrls.map(url => ({
 			rawUrl: url,
-			url: '/details?url=' + escape(url)
+			url: '/details?ytUrl=' + escape(url)
 		}))
 	});
 });
 
 app.get('/details', (req, res) => {
-	const id = extractIDFromUrl(req.query.url);
+	const id = extractIDFromUrl(req.query['ytUrl']);
 
 	if (!id) {
 		return res.redirect(302, '/');
@@ -164,7 +164,8 @@ async function setupDB() {
 
 	VideoJob = sequelize.define('videoJob', {
 		execution_time: Sequelize.INTEGER,
-		status: Sequelize.STRING
+		status: Sequelize.STRING,
+		percentage: Sequelize.INTEGER
 	});
 
 	Video.hasOne(VideoJob);
@@ -182,24 +183,28 @@ function sleep(ms) {
 	});
 }
 
-function downloadYtVideo(id) {
+function downloadYtVideo(id, job) {
 	return new Promise((resolve, reject) => {
-		YD.download(id);
+		YD.download(id, id + '.mp3');
 
-		YD.on("finished", () => {
+		YD.on('finished', () => {
 			console.log('YT: finished\n');
 			resolve();
 		});
 
-		YD.on("error", error => {
+		YD.on('error', error => {
 			console.log('YT: error\n');
-		    console.log(error);
-		    reject();
+			console.log(error);
+			reject();
 		});
 
-		YD.on("progress", progress => {
+		YD.on('progress', data => {
 			console.log('YT: progress\n');
-		    console.log(progress);
+			const percentage = Math.round(data.progress.percentage);
+			job.update({
+				percentage
+			});
+			console.log(data);
 		});
 	});
 }
@@ -214,14 +219,13 @@ async function videoHandler(video) {
 		status: 'processing'
 	});
 
-	await downloadYtVideo(video.get().video_id);
+	await downloadYtVideo(video.get().video_id, job);
 	const endTime = new Date();
 
 	await job.update({
 		status: 'resolved',
 		execution_time: endTime - startTime
 	});
-
 }
 
 async function init() {

@@ -79,3 +79,7 @@ body {
 .yt-url-examples li {
 	display: inline;
 }
+
+.percentage-complete {
+	font-size: 20px;
+}

@@ -1,4 +1,22 @@
 <div class="details-container">
+	<h4><a href="/">Back</a></h4>
+	<hr />
+
+	<p>
+		Percentage done: <span class="percentage-complete">{{job.percentage}}%</span>
+	</p>
+
+	<p>
+		Audio:
+			{{#audioReady}}
+				<a href="/audio/{{video.video_id}}.mp3">{{video.video_id}}.mp3</a>
+			{{/audioReady}}
+
+			{{^audioReady}}
+				Not ready yet
+			{{/audioReady}}
+	</p>
+
 	<p>
 		just created? {{justCreated}}
 	</p>
@@ -16,7 +34,7 @@
 	</p>
 
 	<p>
-		job status: "{{job.status}}" (Audio is {{^audioReady}}not{{/audioReady}} ready)
+		job status: {{#audioReady}}✅{{/audioReady}}{{^audioReady}}🚥{{/audioReady}} "{{job.status}}" (Audio is {{^audioReady}}not{{/audioReady}} ready)
 	</p>
 
 	<p>
