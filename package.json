@@ -3,15 +3,15 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node --harmony-async-await index.js"
+    "start": "nodemon index.js"
   },
   "private": true,
   "dependencies": {
     "express": "^4.14.0",
     "get-youtube-id": "^1.0.0",
     "mustache-express": "^1.2.4",
-    "sequelize": "^3.28.0",
-    "sqlite3": "^3.1.8",
-    "youtube-mp3-downloader": "^0.4.4"
+    "sequelize": "^4.37.6",
+    "sqlite3": "^4.0.0",
+    "youtube-mp3-downloader": "^0.5.3"
   }
 }
