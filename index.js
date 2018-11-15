@@ -8,10 +8,16 @@ const YoutubeMp3Downloader = require('youtube-mp3-downloader');
 
 const YD = new YoutubeMp3Downloader({
     'ffmpegPath': '/usr/local/bin/ffmpeg',
-    'outputPath': __dirname + '/public/audio',
+    'outputPath': '/Users/umarhansa/Downloads/yt-downloader-web/audio',
     'youtubeVideoQuality': 'highest',
     'queueParallelism': 1,
-    'progressTimeout': 1000
+    'progressTimeout': 500
+});
+
+// todo globalise me
+YD.on('progress', data => {
+	const percentage = Math.round(data.progress.percentage);
+	console.log('prog::: ', data);
 });
 
 let Video;
@@ -41,7 +47,7 @@ const queue = {
 				await queue.handler(item);
 				delay = 1000;
 			} else {
-				delay = 4000;
+				delay = 2000;
 			}
 
 			setTimeout(queue.startProcessing, delay);
@@ -183,29 +189,19 @@ function sleep(ms) {
 	});
 }
 
-function downloadYtVideo(id, job) {
+function downloadYtVideo(id, progressCallback) {
 	return new Promise((resolve, reject) => {
 		YD.download(id, id + '.mp3');
 
-		YD.on('finished', () => {
-			console.log('YT: finished\n');
-			resolve();
-		});
+		// these need to be global callbacks
+		YD.on('finished', () => resolve());
+		// these need to be global callbacks
+		YD.on('error', error => reject(error));
 
-		YD.on('error', error => {
-			console.log('YT: error\n');
-			console.log(error);
-			reject();
-		});
-
-		YD.on('progress', data => {
-			console.log('YT: progress\n');
-			const percentage = Math.round(data.progress.percentage);
-			job.update({
-				percentage
-			});
-			console.log(data);
-		});
+		// YD.on('progress', data => {
+		// 	const percentage = Math.round(data.progress.percentage);
+		// 	progressCallback(percentage)
+		// });
 	});
 }
 
@@ -219,7 +215,16 @@ async function videoHandler(video) {
 		status: 'processing'
 	});
 
-	await downloadYtVideo(video.get().video_id, job);
+	try {
+		await downloadYtVideo(video.get().video_id, percentage => {
+			job.update({
+				percentage
+			});
+		});
+	} catch (err) {
+		console.log('Error downloading video:', err);
+	}
+
 	const endTime = new Date();
 
 	await job.update({
@@ -235,4 +240,4 @@ async function init() {
 
 init();
 
-app.listen(port, () => console.log(`Server started on port: ${port}`));
+app.listen(port, () => console.log(`\n➡ http://localhost:3000/`));
