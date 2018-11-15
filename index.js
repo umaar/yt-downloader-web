@@ -8,7 +8,7 @@ const YoutubeMp3Downloader = require('youtube-mp3-downloader');
 
 const YD = new YoutubeMp3Downloader({
     'ffmpegPath': '/usr/local/bin/ffmpeg',
-    'outputPath': '/Users/umarhansa/Downloads/yt-downloader-web/audio',
+    'outputPath': `${process.env['HOME']}/Downloads/yt-downloader-web/audio`,
     'youtubeVideoQuality': 'highest',
     'queueParallelism': 1,
     'progressTimeout': 500
@@ -17,7 +17,7 @@ const YD = new YoutubeMp3Downloader({
 // todo globalise me
 YD.on('progress', data => {
 	const percentage = Math.round(data.progress.percentage);
-	console.log('prog::: ', data);
+	console.log('On Progress', data);
 });
 
 let Video;
@@ -240,4 +240,4 @@ async function init() {
 
 init();
 
-app.listen(port, () => console.log(`\n➡ http://localhost:3000/`));
+app.listen(port, () => console.log(`\n➡ http://localhost:${port}/`));
