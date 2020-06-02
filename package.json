@@ -2,16 +2,20 @@
   "name": "yt-downloader-web",
   "version": "1.0.0",
   "main": "index.js",
-  "scripts": {
-    "start": "nodemon index.js"
-  },
   "private": true,
   "dependencies": {
     "express": "^4.17.1",
     "get-youtube-id": "^1.0.1",
-    "mustache-express": "^1.2.8",
-    "sequelize": "^5.8.7",
-    "sqlite3": "^4.0.8",
-    "youtube-mp3-downloader": "^0.5.3"
+    "mustache-express": "^1.3.0",
+    "sequelize": "^5.21.7",
+    "sqlite3": "^4.1.1",
+    "youtube-mp3-downloader": "^0.6.7"
+  },
+  "devDependencies": {
+    "@umaar/personal-eslint-config": "^1.0.2",
+    "xo": "^0.29.1"
+  },
+  "xo": {
+    "extends": "./node_modules/@umaar/personal-eslint-config/rules.json"
   }
 }
