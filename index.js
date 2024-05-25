@@ -1,23 +1,23 @@
-const getYouTubeID = require('get-youtube-id');
-const mustacheExpress = require('mustache-express');
+const getYouTubeID = require("get-youtube-id");
+const mustacheExpress = require("mustache-express");
 const port = 3000;
-const express = require('express');
+const express = require("express");
 const app = express();
 
-const YoutubeMp3Downloader = require('youtube-mp3-downloader');
+const YoutubeMp3Downloader = require("youtube-mp3-downloader");
 
 const YD = new YoutubeMp3Downloader({
-	ffmpegPath: '/usr/local/bin/ffmpeg',
+	ffmpegPath: "/usr/local/bin/ffmpeg",
 	outputPath: `${process.env.HOME}/Downloads/yt-downloader-web/audio`,
-	youtubeVideoQuality: 'highest',
+	youtubeVideoQuality: "highest",
 	queueParallelism: 1,
-	progressTimeout: 500
+	progressTimeout: 500,
 });
 
 // Todo globalise me
-YD.on('progress', data => {
+YD.on("progress", (data) => {
 	const percentage = Math.round(data.progress.percentage);
-	console.log('On Progress', data);
+	console.log("On Progress", data);
 });
 
 let Video;
@@ -26,8 +26,8 @@ let VideoJob;
 async function getNextItem() {
 	const jobQuery = await VideoJob.findOne({
 		where: {
-			status: 'queued'
-		}
+			status: "queued",
+		},
 	});
 
 	if (jobQuery) {
@@ -60,62 +60,62 @@ const queue = {
 			queue.running = true;
 			queue.startProcessing();
 		}
-	}
+	},
 };
 
-app.engine('mustache', mustacheExpress());
-app.set('view engine', 'mustache');
-app.set('layout', 'layout');
-app.set('views', __dirname + '/views');
-app.use(express.static('public'));
+app.engine("mustache", mustacheExpress());
+app.set("view engine", "mustache");
+app.set("layout", "layout");
+app.set("views", __dirname + "/views");
+app.use(express.static("public"));
 
 function extractIDFromUrl(url) {
-	return getYouTubeID(url, {fuzzy: false});
+	return getYouTubeID(url, { fuzzy: false });
 }
 
-app.get('/', (request, res) => {
+app.get("/", (request, res) => {
 	const exampleYouTubeUrls = [
-		'https://www.youtube.com/watch?v=Jv1ZN8c4_Gs',
-		'https://www.youtube.com/watch?v=E-6xk4W6N20',
-		'https://www.youtube.com/watch?v=U6y7YOlldek'
+		"https://www.youtube.com/watch?v=Jv1ZN8c4_Gs",
+		"https://www.youtube.com/watch?v=E-6xk4W6N20",
+		"https://www.youtube.com/watch?v=U6y7YOlldek",
 	];
 
-	res.render('index', {
-		title: 'Home',
-		exampleYouTubeUrls: exampleYouTubeUrls.map(url => ({
+	res.render("index", {
+		title: "Home",
+		exampleYouTubeUrls: exampleYouTubeUrls.map((url) => ({
 			rawUrl: url,
-			url: '/details?ytUrl=' + escape(url)
-		}))
+			url: "/details?ytUrl=" + escape(url),
+		})),
 	});
 });
 
-app.get('/details', (request, res) => {
+app.get("/details", (request, res) => {
 	const id = extractIDFromUrl(request.query.ytUrl);
 
 	if (!id) {
-		return res.redirect(302, '/');
+		return res.redirect(302, "/");
 	}
 
-	return res.redirect(302, '/details/' + id);
+	return res.redirect(302, "/details/" + id);
 });
 
-app.get('/details/:id', async (request, res) => {
+app.get("/details/:id", async (request, res) => {
 	const id = request.params.id;
 
 	if (!id) {
-		return res.redirect(302, '/');
+		return res.redirect(302, "/");
 	}
 
 	const videoMatch = await Video.findOne({
 		where: {
-			video_id: id
-		}
+			video_id: id,
+		},
 	});
 
 	const responseData = {
 		justCreated: false,
-		title: 'Video Details',
-		id
+		title: "Video Details",
+		id,
 	};
 
 	if (videoMatch) {
@@ -129,12 +129,12 @@ app.get('/details/:id', async (request, res) => {
 	} else {
 		const video = await Video.create({
 			video_id: id,
-			video_provider: 'youtube',
-			video_duration: 200
+			video_provider: "youtube",
+			video_duration: 200,
 		});
 
 		const job = await video.createVideoJob({
-			status: 'queued'
+			status: "queued",
 		});
 
 		responseData.video = video.get();
@@ -144,34 +144,34 @@ app.get('/details/:id', async (request, res) => {
 
 	responseData.jobsLength = await VideoJob.count();
 
-	responseData.audioReady = responseData.job.status === 'resolved';
-	res.render('details', responseData);
+	responseData.audioReady = responseData.job.status === "resolved";
+	res.render("details", responseData);
 });
 
 async function setupDB() {
 	const shouldDropTables = true;
-	const Sequelize = require('sequelize');
-	const sequelize = new Sequelize('database', 'username', 'password', {
-		storage: __dirname + '/database.sqlite',
-		host: 'localhost',
-		dialect: 'sqlite',
-		logging: false
+	const Sequelize = require("sequelize");
+	const sequelize = new Sequelize("database", "username", "password", {
+		storage: __dirname + "/database.sqlite",
+		host: "localhost",
+		dialect: "sqlite",
+		logging: false,
 	});
 
-	Video = sequelize.define('video', {
+	Video = sequelize.define("video", {
 		video_id: {
 			type: Sequelize.STRING,
 			allowNull: false,
-			unique: true
+			unique: true,
 		},
 		video_provider: Sequelize.STRING,
-		video_duration: Sequelize.INTEGER
+		video_duration: Sequelize.INTEGER,
 	});
 
-	VideoJob = sequelize.define('videoJob', {
+	VideoJob = sequelize.define("videoJob", {
 		execution_time: Sequelize.INTEGER,
 		status: Sequelize.STRING,
-		percentage: Sequelize.INTEGER
+		percentage: Sequelize.INTEGER,
 	});
 
 	Video.hasOne(VideoJob);
@@ -179,7 +179,7 @@ async function setupDB() {
 
 	return await sequelize.sync({
 		force: Boolean(shouldDropTables),
-		logging: false
+		logging: false,
 	});
 }
 
@@ -191,12 +191,12 @@ function sleep(ms) {
 
 function downloadYtVideo(id, progressCallback) {
 	return new Promise((resolve, reject) => {
-		YD.download(id, id + '.mp3');
+		YD.download(id, id + ".mp3");
 
 		// These need to be global callbacks
-		YD.on('finished', () => resolve());
+		YD.on("finished", () => resolve());
 		// These need to be global callbacks
-		YD.on('error', error => reject(error));
+		YD.on("error", (error) => reject(error));
 
 		// YD.on('progress', data => {
 		// 	const percentage = Math.round(data.progress.percentage);
@@ -208,28 +208,28 @@ function downloadYtVideo(id, progressCallback) {
 async function videoHandler(video) {
 	const startTime = new Date();
 
-	console.log('\nvideo received', video.get().video_id);
+	console.log("\nvideo received", video.get().video_id);
 	const job = await video.getVideoJob();
 
 	await job.update({
-		status: 'processing'
+		status: "processing",
 	});
 
 	try {
-		await downloadYtVideo(video.get().video_id, percentage => {
+		await downloadYtVideo(video.get().video_id, (percentage) => {
 			job.update({
-				percentage
+				percentage,
 			});
 		});
 	} catch (error) {
-		console.log('Error downloading video:', error);
+		console.log("Error downloading video:", error);
 	}
 
 	const endTime = new Date();
 
 	await job.update({
-		status: 'resolved',
-		execution_time: endTime - startTime
+		status: "resolved",
+		execution_time: endTime - startTime,
 	});
 }
 
